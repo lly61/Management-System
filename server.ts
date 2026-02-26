@@ -14,6 +14,12 @@ import productionRoutes from "./server/routes/production";
 import qualityRoutes from "./server/routes/quality";
 import reportRoutes from "./server/routes/reports";
 
+import { fileURLToPath } from "url";
+
+// 获取当前文件的目录路径（ES Module 方式）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = 3005;
 
