@@ -1,13 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { useGlobalStore, type AuthUser } from "../store/globalStore";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department?: string;
-}
+export type User = AuthUser;
 
 interface AuthContextType {
   user: User | null;
@@ -20,37 +15,28 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  const { user, token, setAuth, clearAuth } = useGlobalStore((state) => ({
+    user: state.user,
+    token: state.token,
+    setAuth: state.setAuth,
+    clearAuth: state.clearAuth,
+  }));
 
   const login = (newToken: string, newUser: User) => {
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    navigate('/home');
+    setAuth(newToken, newUser);
+    navigate("/home");
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    clearAuth();
+    navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{ user, token, login, logout, isAuthenticated: !!token }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -59,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

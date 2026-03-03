@@ -1,140 +1,110 @@
-// This service handles API calls and provides mock fallbacks if the backend is unavailable
+import { useGlobalStore } from "../store/globalStore";
 
-const API_BASE = '/api';
+const API_BASE = "/api";
 
-// Mock Data Generators
-const mockInventory = [
-  { _id: '1', partNumber: 'ENG-001', name: 'V6 Engine Block', category: 'Engine', quantity: 45, minStockLevel: 10, location: 'A-01', supplier: 'MetalWorks Inc', unitPrice: 1200, lastUpdated: new Date().toISOString() },
-  { _id: '2', partNumber: 'BRK-202', name: 'Ceramic Brake Pad', category: 'Chassis', quantity: 150, minStockLevel: 50, location: 'B-12', supplier: 'SafeStop', unitPrice: 85, lastUpdated: new Date().toISOString() },
-  { _id: '3', partNumber: 'ELC-550', name: 'ECU Control Unit', category: 'Electronics', quantity: 8, minStockLevel: 15, location: 'S-05', supplier: 'TechChips', unitPrice: 450, lastUpdated: new Date().toISOString() },
-  { _id: '4', partNumber: 'SUS-101', name: 'Front Strut Assembly', category: 'Suspension', quantity: 32, minStockLevel: 20, location: 'C-03', supplier: 'Dampeners Co', unitPrice: 180, lastUpdated: new Date().toISOString() },
-  { _id: '5', partNumber: 'TRN-900', name: '6-Speed Transmission', category: 'Transmission', quantity: 12, minStockLevel: 5, location: 'A-04', supplier: 'GearBox Ltd', unitPrice: 2500, lastUpdated: new Date().toISOString() },
-];
-
-const mockOrders = [
-  { _id: '1', orderId: 'ORD-2024-001', customerName: 'AutoFix Garage', totalAmount: 5400, status: 'processing', orderDate: '2024-02-20', items: [] },
-  { _id: '2', orderId: 'ORD-2024-002', customerName: 'Speedy Repairs', totalAmount: 1250, status: 'shipped', orderDate: '2024-02-18', items: [] },
-  { _id: '3', orderId: 'ORD-2024-003', customerName: 'City Motors', totalAmount: 8900, status: 'pending', orderDate: '2024-02-24', items: [] },
-];
-
-const mockProduction = [
-  { _id: '1', planId: 'PLN-101', partNumber: 'ENG-001', targetQuantity: 50, completedQuantity: 30, startDate: '2024-02-01', endDate: '2024-02-28', status: 'in_progress', assignedLine: 'Line A' },
-  { _id: '2', planId: 'PLN-102', partNumber: 'BRK-202', targetQuantity: 200, completedQuantity: 200, startDate: '2024-01-15', endDate: '2024-01-30', status: 'completed', assignedLine: 'Line B' },
-  { _id: '3', planId: 'PLN-103', partNumber: 'ELC-550', targetQuantity: 100, completedQuantity: 0, startDate: '2024-03-01', endDate: '2024-03-15', status: 'planned', assignedLine: 'Line C' },
-];
-
-const mockQuality = [
-  { _id: '1', checkId: 'QC-5501', productionPlanId: 'PLN-101', batchNumber: 'B-001', inspector: 'John Doe', checkDate: '2024-02-20', passed: true, defectsFound: 0, notes: 'All specs within tolerance' },
-  { _id: '2', checkId: 'QC-5502', productionPlanId: 'PLN-101', batchNumber: 'B-002', inspector: 'Jane Smith', checkDate: '2024-02-21', passed: false, defectsFound: 3, notes: 'Micro-cracks detected' },
-];
-
-const mockStats = {
-  stats: {
-    totalOrders: 156,
-    pendingOrders: 12,
-    activeProduction: 5,
-    qualityIssues: 3
-  },
-  revenueData: [
-    { name: 'Jan', value: 45000 },
-    { name: 'Feb', value: 52000 },
-    { name: 'Mar', value: 48000 },
-    { name: 'Apr', value: 61000 },
-    { name: 'May', value: 55000 },
-    { name: 'Jun', value: 67000 },
-  ]
-};
-
-const mockUsers = [
-  { _id: '1', name: 'John Doe', email: 'john@autoparts.com', role: 'admin', department: 'Management', status: 'active' },
-  { _id: '2', name: 'Jane Smith', email: 'jane@autoparts.com', role: 'manager', department: 'Production', status: 'active' },
-  { _id: '3', name: 'Mike Johnson', email: 'mike@autoparts.com', role: 'worker', department: 'Assembly', status: 'inactive' },
-  { _id: '4', name: 'Sarah Wilson', email: 'sarah@autoparts.com', role: 'inspector', department: 'Quality', status: 'active' },
-];
-
-async function fetchWithMock(endpoint: string, options: RequestInit = {}, mockData: any) {
+async function fetchData(endpoint: string, options: RequestInit = {}) {
   try {
+    const token = useGlobalStore((state) => state.token);
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     });
-    
-    if (!response.ok) throw new Error('API Error');
+
+    if (!response.ok) throw new Error("API Error");
     return await response.json();
   } catch (error) {
-    console.warn(`API call to ${endpoint} failed, using mock data.`, error);
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return mockData;
+    return null;
   }
 }
 
 export const api = {
   inventory: {
-    getAll: () => fetchWithMock('/inventory', {}, mockInventory),
-    create: (data: any) => fetchWithMock('/inventory', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString(), lastUpdated: new Date().toISOString() }),
-    update: (id: string, data: any) => fetchWithMock(`/inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) }, { ...data, _id: id, lastUpdated: new Date().toISOString() }),
-    delete: (id: string) => fetchWithMock(`/inventory/${id}`, { method: 'DELETE' }, { message: 'Item deleted' }),
+    getAll: () => fetchData("/inventory", {}),
+    create: (data: any) =>
+      fetchData("/inventory", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      fetchData(`/inventory/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => fetchData(`/inventory/${id}`, { method: "DELETE" }),
   },
   orders: {
-    getAll: () => fetchWithMock('/orders', {}, mockOrders),
-    getById: (id: string) => fetchWithMock(`/orders/${id}`, {}, mockOrders[0]),
-    create: (data: any) => fetchWithMock('/orders', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString() }),
-    updateStatus: (id: string, status: string) => fetchWithMock(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, { ...mockOrders[0], status }),
-    delete: (id: string) => fetchWithMock(`/orders/${id}`, { method: 'DELETE' }, { message: 'Order deleted' }),
+    getAll: () => fetchData("/orders", {}),
+    getById: (id: string) => fetchData(`/orders/${id}`, {}),
+    create: (data: any) =>
+      fetchData("/orders", { method: "POST", body: JSON.stringify(data) }),
+    updateStatus: (id: string, status: string) =>
+      fetchData(`/orders/${id}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+      }),
+    delete: (id: string) => fetchData(`/orders/${id}`, { method: "DELETE" }),
   },
   production: {
-    getAll: () => fetchWithMock('/production', {}, mockProduction),
-    create: (data: any) => fetchWithMock('/production', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString() }),
-    update: (id: string, data: any) => fetchWithMock(`/production/${id}`, { method: 'PUT', body: JSON.stringify(data) }, { ...data, _id: id }),
-    delete: (id: string) => fetchWithMock(`/production/${id}`, { method: 'DELETE' }, { message: 'Production plan deleted' }),
+    getAll: () => fetchData("/production", {}),
+    create: (data: any) =>
+      fetchData("/production", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      fetchData(`/production/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchData(`/production/${id}`, { method: "DELETE" }),
   },
   quality: {
-    getAll: () => fetchWithMock('/quality', {}, mockQuality),
+    getAll: () => fetchData("/quality", {}),
   },
   reports: {
-    getDashboard: () => fetchWithMock('/reports/dashboard', {}, mockStats),
+    getDashboard: () => fetchData("/reports/dashboard", {}),
   },
   users: {
-    getAll: () => fetchWithMock('/auth/users', {}, mockUsers),
-    update: (id: string, data: any) => fetchWithMock(`/auth/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, { ...data, _id: id }),
-    delete: (id: string) => fetchWithMock(`/auth/users/${id}`, { method: 'DELETE' }, { message: 'User deleted' }),
+    getAll: () => fetchData("/auth/users", {}),
+    update: (id: string, data: any) =>
+      fetchData(`/auth/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchData(`/auth/users/${id}`, { method: "DELETE" }),
   },
   auth: {
     login: async (credentials: any) => {
       try {
         const response = await fetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(credentials),
         });
-        if (!response.ok) throw new Error('Login failed');
+        if (!response.ok) throw new Error("Login failed");
         return await response.json();
       } catch (e) {
-        console.warn('Backend login failed, using mock login');
-        return {
-          token: 'mock-jwt-token',
-          user: { id: 'mock-user', name: 'Demo User', email: credentials.email, role: 'admin', department: 'Management' }
-        };
+        return null;
       }
     },
     register: async (data: any) => {
       try {
         const response = await fetch(`${API_BASE}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error('Registration failed');
+        if (!response.ok) throw new Error("Registration failed");
         return await response.json();
       } catch (e) {
-        console.warn('Backend register failed, using mock');
-        return { message: 'Mock registration successful' };
+        return null;
       }
-    }
-  }
+    },
+  },
 };

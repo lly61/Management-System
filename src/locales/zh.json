@@ -28,8 +28,8 @@
     "hasAccount": "已有账号？去登录",
     "secure": "安全",
     "reliable": "可靠",
-    "placeholderName": "张三",
-    "placeholderEmail": "admin@autoparts.com",
+    "placeholderName": "请输入用户名",
+    "placeholderEmail": "请输入邮箱地址",
     "regSuccess": "注册成功！请登录。",
     "authFailed": "认证失败，请检查账号或密码。"
   },

@@ -28,8 +28,8 @@
     "hasAccount": "Already have an account? Sign in",
     "secure": "Secure",
     "reliable": "Reliable",
-    "placeholderName": "John Doe",
-    "placeholderEmail": "admin@autoparts.com",
+    "placeholderName": "Username",
+    "placeholderEmail": "email@example.com",
     "regSuccess": "Registration successful! Please login.",
     "authFailed": "Authentication failed. Please check your credentials."
   },

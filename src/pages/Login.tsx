@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
-import { motion } from 'motion/react';
-import { Car, ShieldCheck, Wrench } from 'lucide-react';
-import { Select } from 'antd';
-import { useGlobalStore, type Lang } from '../store/globalStore';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../context/AuthContext";
+import { api } from "../services/api";
+import { motion } from "motion/react";
+import { Car, ShieldCheck, Wrench } from "lucide-react";
+import { message, Select } from "antd";
+import { useGlobalStore, type Lang } from "../store/globalStore";
 
 const LANGUAGE_OPTIONS = [
-  { value: 'zh' as const, label: '中文' },
-  { value: 'en' as const, label: 'English' },
+  { value: "zh" as const, label: "中文" },
+  { value: "en" as const, label: "English" },
 ];
 
 export default function Login() {
@@ -17,16 +17,16 @@ export default function Login() {
   const lang = useGlobalStore((s) => s.lang);
   const setLang = useGlobalStore((s) => s.setLang);
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
@@ -34,12 +34,18 @@ export default function Login() {
         const data = await api.auth.login({ email, password });
         login(data.token, data.user);
       } else {
-        await api.auth.register({ email, password, name, role: 'manager', department: 'General' });
+        await api.auth.register({
+          email,
+          password,
+          name,
+          role: "manager",
+          department: "General",
+        });
         setIsLogin(true);
-        setError(t('login.regSuccess'));
+        message.success(t("login.regSuccess"));
       }
     } catch (err) {
-      setError(t('login.authFailed'));
+      setError(t("login.authFailed"));
     } finally {
       setLoading(false);
     }
@@ -56,13 +62,12 @@ export default function Login() {
           size="middle"
         />
       </div>
-      {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700 relative z-10"
@@ -73,8 +78,10 @@ export default function Login() {
               <Car className="text-white w-8 h-8" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h2>
-          <p className="text-slate-400">{t('login.subtitle')}</p>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {t("login.title")}
+          </h2>
+          <p className="text-slate-400">{t("login.subtitle")}</p>
         </div>
 
         {error && (
@@ -86,30 +93,36 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">{t('login.fullName')}</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                {t("login.fullName")}
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder={t('login.placeholderName')}
+                placeholder={t("login.placeholderName")}
                 required
               />
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">{t('login.email')}</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              {t("login.email")}
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder={t('login.placeholderEmail')}
+              placeholder={t("login.placeholderEmail")}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">{t('login.password')}</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              {t("login.password")}
+            </label>
             <input
               type="password"
               value={password}
@@ -125,7 +138,11 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-semibold py-3 rounded-lg shadow-lg transform transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? t('login.processing') : (isLogin ? t('login.signIn') : t('login.createAccount'))}
+            {loading
+              ? t("login.processing")
+              : isLogin
+              ? t("login.signIn")
+              : t("login.createAccount")}
           </button>
         </form>
 
@@ -134,18 +151,18 @@ export default function Login() {
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm text-slate-400 hover:text-white transition-colors"
           >
-            {isLogin ? t('login.noAccount') : t('login.hasAccount')}
+            {isLogin ? t("login.noAccount") : t("login.hasAccount")}
           </button>
         </div>
 
         <div className="mt-8 pt-6 border-t border-slate-700 flex justify-center space-x-6 text-slate-500">
           <div className="flex flex-col items-center">
             <ShieldCheck size={20} className="mb-1" />
-            <span className="text-xs">{t('login.secure')}</span>
+            <span className="text-xs">{t("login.secure")}</span>
           </div>
           <div className="flex flex-col items-center">
             <Wrench size={20} className="mb-1" />
-            <span className="text-xs">{t('login.reliable')}</span>
+            <span className="text-xs">{t("login.reliable")}</span>
           </div>
         </div>
       </motion.div>
