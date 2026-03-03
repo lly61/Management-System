@@ -1,7 +1,31 @@
 import express from 'express';
 import { Inventory } from '../models/Inventory';
+import { toCSV } from '../utils/csv';
 
 const router = express.Router();
+
+router.get('/export', async (req, res) => {
+  try {
+    const items = await Inventory.find().sort({ lastUpdated: -1 }).lean();
+    const columns = [
+      { key: 'partNumber', header: 'Part Number' },
+      { key: 'name', header: 'Name' },
+      { key: 'category', header: 'Category' },
+      { key: 'quantity', header: 'Quantity' },
+      { key: 'minStockLevel', header: 'Min Stock' },
+      { key: 'location', header: 'Location' },
+      { key: 'supplier', header: 'Supplier' },
+      { key: 'unitPrice', header: 'Unit Price' },
+      { key: 'lastUpdated', header: 'Last Updated' },
+    ];
+    const csv = toCSV(items as any[], columns);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="inventory.csv"');
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting inventory' });
+  }
+});
 
 router.get('/', async (req, res) => {
   try {

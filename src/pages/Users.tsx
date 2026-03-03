@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
-import { User, Mail, Shield, Trash2, Pencil } from "lucide-react";
+import { User, Mail, Shield, Trash2, Pencil, Download } from "lucide-react";
 import { Button, Modal, Form, Input, Select, message, Popconfirm, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
@@ -112,6 +112,12 @@ export default function UsersPage() {
     }
   };
 
+  const handleExport = async () => {
+    const ok = await api.users.exportCsv();
+    if (ok) message.success(t("users.exportSuccess"));
+    else message.error(t("users.loadFailed"));
+  };
+
   const columns: ColumnsType<any> = [
     {
       title: t("users.name"),
@@ -173,9 +179,14 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">{t("users.title")}</h2>
-        <Button type="primary" icon={<User size={18} />} onClick={openAdd} className="flex items-center gap-2">
-          {t("users.addMember")}
-        </Button>
+        <Space>
+          <Button icon={<Download size={18} />} onClick={handleExport}>
+            {t("users.export")}
+          </Button>
+          <Button type="primary" icon={<User size={18} />} onClick={openAdd} className="flex items-center gap-2">
+            {t("users.addMember")}
+          </Button>
+        </Space>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

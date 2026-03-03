@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
-import { Calendar, CheckCircle, Clock, Truck, Plus, Eye } from "lucide-react";
-import { Button, Modal, Form, Input, InputNumber, Select, message, Popconfirm, Table } from "antd";
+import { Calendar, CheckCircle, Clock, Truck, Plus, Eye, Download } from "lucide-react";
+import { Button, Modal, Form, Input, InputNumber, Select, message, Popconfirm, Table, Space } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
 export default function Orders() {
@@ -118,13 +118,24 @@ export default function Orders() {
     }
   };
 
+  const handleExport = async () => {
+    const ok = await api.orders.exportCsv();
+    if (ok) message.success(t("orders.exportSuccess"));
+    else message.error(t("orders.loadFailed"));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">{t("orders.title")}</h2>
-        <Button type="primary" icon={<Plus size={18} />} onClick={() => { form.resetFields(); itemsForm.setFieldsValue({ items: [] }); setAddOpen(true); }}>
-          {t("orders.newOrder")}
-        </Button>
+        <Space>
+          <Button icon={<Download size={18} />} onClick={handleExport}>
+            {t("orders.export")}
+          </Button>
+          <Button type="primary" icon={<Plus size={18} />} onClick={() => { form.resetFields(); itemsForm.setFieldsValue({ items: [] }); setAddOpen(true); }}>
+            {t("orders.newOrder")}
+          </Button>
+        </Space>
       </div>
 
       <div className="grid gap-4">

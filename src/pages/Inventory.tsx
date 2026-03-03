@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
-import { Search, Plus, Filter, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Filter, Pencil, Trash2, Download } from "lucide-react";
 import { Modal, Form, Input, InputNumber, Select, Button, message, Popconfirm, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
@@ -130,6 +130,12 @@ export default function Inventory() {
     setFilterVisible(false);
   };
 
+  const handleExport = async () => {
+    const ok = await api.inventory.exportCsv();
+    if (ok) message.success(t("inventory.exportSuccess"));
+    else message.error(t("inventory.loadFailed"));
+  };
+
   const hasActiveFilters = filterStock !== "all" || !!filterCategory;
 
   const columns: ColumnsType<any> = [
@@ -188,9 +194,14 @@ export default function Inventory() {
           <h2 className="text-2xl font-bold text-gray-800">{t("inventory.title")}</h2>
           <p className="text-gray-500">{t("inventory.subtitle")}</p>
         </div>
-        <Button type="primary" icon={<Plus size={18} />} onClick={openAdd} className="flex items-center gap-2">
-          {t("inventory.addPart")}
-        </Button>
+        <Space>
+          <Button icon={<Download size={18} />} onClick={handleExport}>
+            {t("inventory.export")}
+          </Button>
+          <Button type="primary" icon={<Plus size={18} />} onClick={openAdd} className="flex items-center gap-2">
+            {t("inventory.addPart")}
+          </Button>
+        </Space>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

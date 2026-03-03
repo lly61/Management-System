@@ -46,6 +46,8 @@
     "title": "库存管理",
     "subtitle": "跟踪零件、库存水平和供货商",
     "addPart": "添加部件",
+    "export": "导出 CSV",
+    "exportSuccess": "导出成功",
     "searchPlaceholder": "按名称或编号搜索...",
     "filter": "筛选",
     "clearFilter": "清除筛选",
@@ -84,6 +86,8 @@
   "orders": {
     "title": "订单管理",
     "newOrder": "新建订单",
+    "export": "导出 CSV",
+    "exportSuccess": "导出成功",
     "viewDetail": "查看详情",
     "orderDetail": "订单详情",
     "orderItems": "订单明细",
@@ -165,11 +169,15 @@
     "passed": "通过",
     "failed": "未通过",
     "empty": "暂无数据",
-    "total": "共 {{count}} 条"
+    "total": "共 {{count}} 条",
+    "export": "导出 CSV",
+    "exportSuccess": "导出成功"
   },
   "users": {
     "title": "用户管理",
     "addMember": "添加成员",
+    "export": "导出 CSV",
+    "exportSuccess": "导出成功",
     "name": "名称",
     "role": "角色",
     "department": "部门",

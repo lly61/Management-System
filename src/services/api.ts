@@ -4,12 +4,12 @@ const API_BASE = "/api";
 
 async function fetchData(endpoint: string, options: RequestInit = {}) {
   try {
-    const token = useGlobalStore((state) => state.token);
+    const token = useGlobalStore.getState().token;
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
     });
@@ -21,9 +21,34 @@ async function fetchData(endpoint: string, options: RequestInit = {}) {
   }
 }
 
+/** 请求 CSV 并触发浏览器下载 */
+async function downloadCsv(
+  endpoint: string,
+  filename: string
+): Promise<boolean> {
+  try {
+    const token = useGlobalStore.getState().token;
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) throw new Error("Export failed");
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export const api = {
   inventory: {
     getAll: () => fetchData("/inventory", {}),
+    exportCsv: () => downloadCsv("/inventory/export", "inventory.csv"),
     create: (data: any) =>
       fetchData("/inventory", {
         method: "POST",
@@ -38,6 +63,7 @@ export const api = {
   },
   orders: {
     getAll: () => fetchData("/orders", {}),
+    exportCsv: () => downloadCsv("/orders/export", "orders.csv"),
     getById: (id: string) => fetchData(`/orders/${id}`, {}),
     create: (data: any) =>
       fetchData("/orders", { method: "POST", body: JSON.stringify(data) }),
@@ -65,12 +91,14 @@ export const api = {
   },
   quality: {
     getAll: () => fetchData("/quality", {}),
+    exportCsv: () => downloadCsv("/quality/export", "quality-checks.csv"),
   },
   reports: {
     getDashboard: () => fetchData("/reports/dashboard", {}),
   },
   users: {
     getAll: () => fetchData("/auth/users", {}),
+    exportCsv: () => downloadCsv("/auth/users/export", "users.csv"),
     update: (id: string, data: any) =>
       fetchData(`/auth/users/${id}`, {
         method: "PUT",

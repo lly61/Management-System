@@ -1,7 +1,36 @@
 import express from 'express';
 import { Order } from '../models/Order';
+import { toCSV } from '../utils/csv';
 
 const router = express.Router();
+
+router.get('/export', async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ orderDate: -1 }).lean();
+    const rows = orders.map((o: any) => ({
+      orderId: o.orderId,
+      customerName: o.customerName,
+      totalAmount: o.totalAmount,
+      status: o.status,
+      orderDate: o.orderDate,
+      deliveryDate: o.deliveryDate ?? '',
+    }));
+    const columns = [
+      { key: 'orderId', header: 'Order ID' },
+      { key: 'customerName', header: 'Customer' },
+      { key: 'totalAmount', header: 'Total Amount' },
+      { key: 'status', header: 'Status' },
+      { key: 'orderDate', header: 'Order Date' },
+      { key: 'deliveryDate', header: 'Delivery Date' },
+    ];
+    const csv = toCSV(rows, columns);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting orders' });
+  }
+});
 
 router.get('/', async (req, res) => {
   try {

@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { toCSV } from '../utils/csv';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key_123';
@@ -40,6 +41,27 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// 用户列表导出 CSV
+router.get('/users/export', async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
+    const columns = [
+      { key: 'name', header: 'Name' },
+      { key: 'email', header: 'Email' },
+      { key: 'role', header: 'Role' },
+      { key: 'department', header: 'Department' },
+      { key: 'status', header: 'Status' },
+      { key: 'createdAt', header: 'Created At' },
+    ];
+    const csv = toCSV(users as any[], columns);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="users.csv"');
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting users' });
   }
 });
 

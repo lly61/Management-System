@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
-import { CheckCircle, XCircle } from 'lucide-react';
-import { Table } from 'antd';
+import { CheckCircle, XCircle, Download } from 'lucide-react';
+import { Table, Button, message, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
 export default function Quality() {
@@ -44,9 +44,20 @@ export default function Quality() {
     { title: t('quality.notes'), dataIndex: 'notes', key: 'notes', render: (v: string) => <span className="text-gray-500 text-sm italic">{v}</span> },
   ];
 
+  const handleExport = async () => {
+    const ok = await api.quality.exportCsv();
+    if (ok) message.success(t('quality.exportSuccess'));
+    else message.error('Export failed');
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">{t('quality.title')}</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">{t('quality.title')}</h2>
+        <Button icon={<Download size={18} />} onClick={handleExport}>
+          {t('quality.export')}
+        </Button>
+      </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <Table

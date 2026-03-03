@@ -46,6 +46,8 @@
     "title": "Inventory",
     "subtitle": "Track parts, stock levels and suppliers",
     "addPart": "Add Part",
+    "export": "Export CSV",
+    "exportSuccess": "Export successful",
     "searchPlaceholder": "Search by name or number...",
     "filter": "Filter",
     "clearFilter": "Clear",
@@ -84,6 +86,8 @@
   "orders": {
     "title": "Orders",
     "newOrder": "New Order",
+    "export": "Export CSV",
+    "exportSuccess": "Export successful",
     "viewDetail": "Detail",
     "orderDetail": "Order Detail",
     "orderItems": "Items",
@@ -165,11 +169,15 @@
     "passed": "Passed",
     "failed": "Failed",
     "empty": "No data",
-    "total": "{{count}} total"
+    "total": "{{count}} total",
+    "export": "Export CSV",
+    "exportSuccess": "Export successful"
   },
   "users": {
     "title": "Users",
     "addMember": "Add Member",
+    "export": "Export CSV",
+    "exportSuccess": "Export successful",
     "name": "Name",
     "role": "Role",
     "department": "Department",
