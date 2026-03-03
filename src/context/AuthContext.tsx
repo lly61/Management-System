@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useCallback, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGlobalStore, type AuthUser } from "../store/globalStore";
 
@@ -16,27 +16,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const { user, token, setAuth, clearAuth } = useGlobalStore((state) => ({
-    user: state.user,
-    token: state.token,
-    setAuth: state.setAuth,
-    clearAuth: state.clearAuth,
-  }));
+  const user = useGlobalStore((s) => s.user);
+  const token = useGlobalStore((s) => s.token);
+  const setAuth = useGlobalStore((s) => s.setAuth);
+  const clearAuth = useGlobalStore((s) => s.clearAuth);
 
-  const login = (newToken: string, newUser: User) => {
-    setAuth(newToken, newUser);
-    navigate("/home");
-  };
+  const login = useCallback(
+    (newToken: string, newUser: User) => {
+      setAuth(newToken, newUser);
+      navigate("/home");
+    },
+    [setAuth, navigate]
+  );
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearAuth();
     navigate("/login");
-  };
+  }, [clearAuth, navigate]);
+
+  const value = useMemo(
+    () => ({ user, token, login, logout, isAuthenticated: !!token }),
+    [user, token, login, logout]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, login, logout, isAuthenticated: !!token }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
