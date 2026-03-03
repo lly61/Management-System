@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard,
@@ -14,26 +15,36 @@ import {
   X,
   Settings,
 } from "lucide-react";
+import { Select } from "antd";
 import { cn } from "../lib/utils";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
+import { useGlobalStore, type Lang } from "../store/globalStore";
+
+const LANGUAGE_OPTIONS = [
+  { value: "zh" as const, label: "中文" },
+  { value: "en" as const, label: "English" },
+];
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
+  const lang = useGlobalStore((s) => s.lang);
+  const setLang = useGlobalStore((s) => s.setLang);
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const navItems = [
-    { name: "工作台", path: "/home", icon: LayoutDashboard },
-    { name: "存货管理", path: "/inventory", icon: Package },
-    { name: "订单管理", path: "/orders", icon: ShoppingCart },
-    { name: "生产管理", path: "/production", icon: Factory },
-    { name: "质量管理", path: "/quality", icon: ClipboardCheck },
-    { name: "用户管理", path: "/users", icon: Users },
-    { name: "报告与分析", path: "/reports", icon: BarChart3 },
+    { nameKey: "nav.workbench", path: "/home", icon: LayoutDashboard },
+    { nameKey: "nav.inventory", path: "/inventory", icon: Package },
+    { nameKey: "nav.orders", path: "/orders", icon: ShoppingCart },
+    { nameKey: "nav.production", path: "/production", icon: Factory },
+    { nameKey: "nav.quality", path: "/quality", icon: ClipboardCheck },
+    { nameKey: "nav.users", path: "/users", icon: Users },
+    { nameKey: "nav.reports", path: "/reports", icon: BarChart3 },
   ];
 
   return (
@@ -47,10 +58,10 @@ export default function DashboardLayout({
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
           {isSidebarOpen ? (
             <span className="text-xl font-bold bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-              全流程管理系统
+              {t("layout.appName")}
             </span>
           ) : (
-            <span className="text-xl font-bold text-blue-400 mx-auto">AP</span>
+            <span className="text-xl font-bold text-blue-400 mx-auto">{t("layout.appShort")}</span>
           )}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -89,7 +100,7 @@ export default function DashboardLayout({
                     animate={{ opacity: 1 }}
                     className="ml-3 font-medium whitespace-nowrap"
                   >
-                    {item.name}
+                    {t(item.nameKey)}
                   </motion.span>
                 )}
               </Link>
@@ -119,7 +130,7 @@ export default function DashboardLayout({
             )}
           >
             <LogOut size={20} />
-            {isSidebarOpen && <span className="ml-3">退出</span>}
+            {isSidebarOpen && <span className="ml-3">{t("layout.logout")}</span>}
           </button>
         </div>
       </motion.aside>
@@ -127,10 +138,19 @@ export default function DashboardLayout({
       <main className="flex-1 flex flex-col overflow-hidden h-screen">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
           <h1 className="text-xl font-semibold text-gray-800">
-            {navItems.find((i) => i.path === location.pathname)?.name ||
-              "Dashboard"}
+            {(() => {
+              const item = navItems.find((i) => i.path === location.pathname);
+              return item ? t(item.nameKey) : t("layout.dashboard");
+            })()}
           </h1>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-3">
+            <Select
+              value={lang}
+              onChange={(v) => setLang(v as Lang)}
+              options={LANGUAGE_OPTIONS}
+              className="w-28"
+              size="middle"
+            />
             <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
               <Settings size={20} />
             </button>

@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
 import { Calendar, CheckCircle, Clock, Truck, Plus, Eye } from "lucide-react";
 import { Button, Modal, Form, Input, InputNumber, Select, message, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
-const STATUS_OPTIONS = [
-  { value: "pending", label: "待处理" },
-  { value: "processing", label: "处理中" },
-  { value: "shipped", label: "已发货" },
-  { value: "delivered", label: "已送达" },
-  { value: "cancelled", label: "已取消" },
-];
-
 export default function Orders() {
+  const { t } = useTranslation();
+  const statusOptions = useMemo(
+    () => [
+      { value: "pending", label: t("ordersStatus.pending") },
+      { value: "processing", label: t("ordersStatus.processing") },
+      { value: "shipped", label: t("ordersStatus.shipped") },
+      { value: "delivered", label: t("ordersStatus.delivered") },
+      { value: "cancelled", label: t("ordersStatus.cancelled") },
+    ],
+    [t]
+  );
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -29,7 +33,7 @@ export default function Orders() {
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
-      message.error("加载订单失败");
+      message.error(t("orders.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -68,11 +72,11 @@ export default function Orders() {
   const handleStatusChange = async (orderId: string, status: string) => {
     try {
       await api.orders.updateStatus(orderId, status);
-      message.success("状态已更新");
+      message.success(t("orders.statusUpdated"));
       loadOrders();
       if (detailOrder?._id === orderId) setDetailOrder((prev: any) => (prev ? { ...prev, status } : null));
     } catch {
-      message.error("更新失败");
+      message.error(t("orders.updateFailed"));
     }
   };
 
@@ -92,40 +96,40 @@ export default function Orders() {
           price: Number(r.price) || 0,
         })),
       });
-      message.success("订单已创建");
+      message.success(t("orders.orderCreated"));
       setAddOpen(false);
       form.resetFields();
       itemsForm.setFieldsValue({ items: [] });
       loadOrders();
     } catch (e: any) {
       if (e?.errorFields) return;
-      message.error(e?.message || "创建失败");
+      message.error(e?.message || t("orders.createFailed"));
     }
   };
 
   const handleDeleteOrder = async (id: string) => {
     try {
       await api.orders.delete(id);
-      message.success("订单已删除");
+      message.success(t("orders.orderDeleted"));
       setDetailOpen(false);
       loadOrders();
     } catch {
-      message.error("删除失败");
+      message.error(t("orders.deleteFailed"));
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">订单管理</h2>
+        <h2 className="text-2xl font-bold text-gray-800">{t("orders.title")}</h2>
         <Button type="primary" icon={<Plus size={18} />} onClick={() => { form.resetFields(); itemsForm.setFieldsValue({ items: [] }); setAddOpen(true); }}>
-          新建订单
+          {t("orders.newOrder")}
         </Button>
       </div>
 
       <div className="grid gap-4">
         {loading ? (
-          <div>正在加载订单...</div>
+          <div>{t("orders.loading")}</div>
         ) : (
           orders.map((order) => {
             const StatusIcon = getStatusIcon(order.status);
@@ -140,7 +144,7 @@ export default function Orders() {
                       <h3 className="text-lg font-semibold text-gray-900">{order.orderId}</h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(order.status)}`}>
                         <StatusIcon size={12} />
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {t(`ordersStatus.${order.status}`)}
                       </span>
                     </div>
                     <p className="text-gray-500 text-sm">
@@ -155,11 +159,11 @@ export default function Orders() {
                     <Select
                       value={order.status}
                       onChange={(v) => handleStatusChange(order._id, v)}
-                      options={STATUS_OPTIONS}
+                      options={statusOptions}
                       className="w-28"
                     />
                     <Button type="link" size="small" icon={<Eye size={14} />} onClick={() => openDetail(order)}>
-                      查看详情
+                      {t("orders.viewDetail")}
                     </Button>
                   </div>
                 </div>
@@ -170,14 +174,14 @@ export default function Orders() {
       </div>
 
       <Modal
-        title="订单详情"
+        title={t("orders.orderDetail")}
         open={detailOpen}
         onCancel={() => setDetailOpen(false)}
         footer={[
-          <Button key="close" onClick={() => setDetailOpen(false)}>关闭</Button>,
+          <Button key="close" onClick={() => setDetailOpen(false)}>{t("orders.close")}</Button>,
           detailOrder && (
-            <Popconfirm key="del" title="确定删除该订单？" onConfirm={() => handleDeleteOrder(detailOrder._id)}>
-              <Button danger>删除订单</Button>
+            <Popconfirm key="del" title={t("orders.deleteOrderConfirm")} onConfirm={() => handleDeleteOrder(detailOrder._id)}>
+              <Button danger>{t("orders.deleteOrder")}</Button>
             </Popconfirm>
           ),
         ]}
@@ -186,30 +190,30 @@ export default function Orders() {
         {detailOrder && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div><span className="text-gray-500">订单号：</span>{detailOrder.orderId}</div>
-              <div><span className="text-gray-500">客户：</span>{detailOrder.customerName}</div>
-              <div><span className="text-gray-500">日期：</span>{new Date(detailOrder.orderDate).toLocaleDateString()}</div>
-              <div><span className="text-gray-500">状态：</span>{detailOrder.status}</div>
-              <div><span className="text-gray-500">金额：</span>${Number(detailOrder.totalAmount || 0).toLocaleString()}</div>
+              <div><span className="text-gray-500">{t("orders.orderId")}：</span>{detailOrder.orderId}</div>
+              <div><span className="text-gray-500">{t("orders.customer")}：</span>{detailOrder.customerName}</div>
+              <div><span className="text-gray-500">{t("orders.date")}：</span>{new Date(detailOrder.orderDate).toLocaleDateString()}</div>
+              <div><span className="text-gray-500">{t("orders.status")}：</span>{t(`ordersStatus.${detailOrder.status}`)}</div>
+              <div><span className="text-gray-500">{t("orders.amount")}：</span>${Number(detailOrder.totalAmount || 0).toLocaleString()}</div>
             </div>
             <div>
-              <p className="text-gray-700 font-medium mb-2">订单明细</p>
+              <p className="text-gray-700 font-medium mb-2">{t("orders.orderItems")}</p>
               {detailOrder.items?.length ? (
                 <Table
                   size="small"
                   rowKey={(_, i) => String(i)}
                   columns={[
-                    { title: "零件号", dataIndex: "partNumber", key: "partNumber" },
-                    { title: "数量", dataIndex: "quantity", key: "quantity", align: "right" },
-                    { title: "单价", key: "price", align: "right", render: (_: unknown, r: any) => `$${Number(r.price || 0).toFixed(2)}` },
-                    { title: "小计", key: "subtotal", align: "right", render: (_: unknown, r: any) => `$${((r.quantity || 0) * (r.price || 0)).toFixed(2)}` },
+                    { title: t("orders.partNumber"), dataIndex: "partNumber", key: "partNumber" },
+                    { title: t("orders.quantity"), dataIndex: "quantity", key: "quantity", align: "right" },
+                    { title: t("orders.unitPrice"), key: "price", align: "right", render: (_: unknown, r: any) => `$${Number(r.price || 0).toFixed(2)}` },
+                    { title: t("orders.subtotal"), key: "subtotal", align: "right", render: (_: unknown, r: any) => `$${((r.quantity || 0) * (r.price || 0)).toFixed(2)}` },
                   ] as ColumnsType<any>}
                   dataSource={detailOrder.items}
                   pagination={false}
-                  locale={{ emptyText: "暂无明细" }}
+                  locale={{ emptyText: t("orders.noItems") }}
                 />
               ) : (
-                <p className="text-gray-500 text-sm">暂无明细</p>
+                <p className="text-gray-500 text-sm">{t("orders.noItems")}</p>
               )}
             </div>
           </div>
@@ -217,7 +221,7 @@ export default function Orders() {
       </Modal>
 
       <Modal
-        title="新建订单"
+        title={t("orders.newOrder")}
         open={addOpen}
         onCancel={() => setAddOpen(false)}
         onOk={handleAddOrder}
@@ -225,30 +229,30 @@ export default function Orders() {
         destroyOnClose
       >
         <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item name="orderId" label="订单号" rules={[{ required: true, message: "请输入订单号" }]}>
-            <Input placeholder="如 ORD-2024-004" />
+          <Form.Item name="orderId" label={t("orders.orderId")} rules={[{ required: true }]}>
+            <Input placeholder="ORD-2024-004" />
           </Form.Item>
-          <Form.Item name="customerName" label="客户名称" rules={[{ required: true, message: "请输入客户名称" }]}>
-            <Input placeholder="客户名称" />
+          <Form.Item name="customerName" label={t("orders.customerName")} rules={[{ required: true }]}>
+            <Input placeholder="" />
           </Form.Item>
-          <Form.Item name="totalAmount" label="总金额">
-            <InputNumber min={0} step={0.01} className="w-full" placeholder="可选，或由明细自动计算" />
+          <Form.Item name="totalAmount" label={t("orders.totalAmount")}>
+            <InputNumber min={0} step={0.01} className="w-full" placeholder={t("orders.totalAmountPlaceholder")} />
           </Form.Item>
         </Form>
-        <p className="text-gray-600 text-sm mb-2">订单明细（可选）</p>
+        <p className="text-gray-600 text-sm mb-2">{t("orders.itemsOptional")}</p>
         <Form form={itemsForm} initialValues={{ items: [] }}>
           <Form.List name="items">
             {(fields, { add, remove }) => (
               <>
                 {fields.map(({ key, name }) => (
                   <div key={key} className="flex gap-2 mb-2">
-                    <Form.Item name={[name, "partNumber"]} noStyle><Input placeholder="零件号" style={{ width: 120 }} /></Form.Item>
-                    <Form.Item name={[name, "quantity"]} noStyle><InputNumber min={1} placeholder="数量" style={{ width: 80 }} /></Form.Item>
-                    <Form.Item name={[name, "price"]} noStyle><InputNumber min={0} step={0.01} placeholder="单价" style={{ width: 90 }} /></Form.Item>
-                    <Button type="text" danger onClick={() => remove(name)}>删除</Button>
+                    <Form.Item name={[name, "partNumber"]} noStyle><Input placeholder={t("orders.partNumber")} style={{ width: 120 }} /></Form.Item>
+                    <Form.Item name={[name, "quantity"]} noStyle><InputNumber min={1} placeholder={t("orders.quantity")} style={{ width: 80 }} /></Form.Item>
+                    <Form.Item name={[name, "price"]} noStyle><InputNumber min={0} step={0.01} placeholder={t("orders.unitPrice")} style={{ width: 90 }} /></Form.Item>
+                    <Button type="text" danger onClick={() => remove(name)}>{t("inventory.delete")}</Button>
                   </div>
                 ))}
-                <Button type="dashed" onClick={() => add()} block>+ 添加明细行</Button>
+                <Button type="dashed" onClick={() => add()} block>+ {t("orders.addRow")}</Button>
               </>
             )}
           </Form.List>

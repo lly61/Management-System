@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
 import { User, Mail, Shield, Trash2, Pencil } from "lucide-react";
 import { Button, Modal, Form, Input, Select, message, Popconfirm, Space, Table } from "antd";
@@ -17,6 +18,7 @@ function roleLabel(role: string) {
 }
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function UsersPage() {
       setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
-      message.error("加载用户列表失败");
+      message.error(t("users.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -79,7 +81,7 @@ export default function UsersPage() {
         };
         if (values.password) payload.password = values.password;
         await api.users.update(editingUser._id, payload);
-        message.success("用户已更新");
+        message.success(t("users.userUpdated"));
       } else {
         await api.auth.register({
           name: values.name.trim(),
@@ -88,7 +90,7 @@ export default function UsersPage() {
           role: values.role,
           department: values.department || undefined,
         });
-        message.success("成员已添加");
+        message.success(t("users.memberAdded"));
       }
       setModalOpen(false);
       loadUsers();
@@ -103,16 +105,16 @@ export default function UsersPage() {
   const handleDelete = async (id: string) => {
     try {
       await api.users.delete(id);
-      message.success("已删除");
+      message.success(t("users.deleted"));
       loadUsers();
     } catch {
-      message.error("删除失败");
+      message.error(t("users.deleteFailed"));
     }
   };
 
   const columns: ColumnsType<any> = [
     {
-      title: "名称",
+      title: t("users.name"),
       key: "name",
       render: (_: unknown, user: any) => (
         <div className="flex items-center">
@@ -129,7 +131,7 @@ export default function UsersPage() {
       ),
     },
     {
-      title: "角色",
+      title: t("users.role"),
       dataIndex: "role",
       key: "role",
       render: (role: string) => (
@@ -139,9 +141,9 @@ export default function UsersPage() {
         </span>
       ),
     },
-    { title: "部门", dataIndex: "department", key: "department", render: (v: string) => v ?? "-" },
+    { title: t("users.department"), dataIndex: "department", key: "department", render: (v: string) => v ?? "-" },
     {
-      title: "状态",
+      title: t("users.status"),
       dataIndex: "status",
       key: "status",
       render: (s: string) => {
@@ -154,13 +156,13 @@ export default function UsersPage() {
       },
     },
     {
-      title: "操作",
+      title: t("users.action"),
       key: "action",
       render: (_: unknown, user: any) => (
         <Space>
-          <Button type="link" size="small" icon={<Pencil size={14} />} onClick={() => openEdit(user)}>编辑</Button>
-          <Popconfirm title="确定删除该用户？" onConfirm={() => handleDelete(user._id)}>
-            <Button type="link" size="small" danger icon={<Trash2 size={14} />}>删除</Button>
+          <Button type="link" size="small" icon={<Pencil size={14} />} onClick={() => openEdit(user)}>{t("users.edit")}</Button>
+          <Popconfirm title={t("users.deleteConfirm")} onConfirm={() => handleDelete(user._id)}>
+            <Button type="link" size="small" danger icon={<Trash2 size={14} />}>{t("users.delete")}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -170,9 +172,9 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">用户管理</h2>
+        <h2 className="text-2xl font-bold text-gray-800">{t("users.title")}</h2>
         <Button type="primary" icon={<User size={18} />} onClick={openAdd} className="flex items-center gap-2">
-          添加成员
+          {t("users.addMember")}
         </Button>
       </div>
 
@@ -182,50 +184,47 @@ export default function UsersPage() {
           columns={columns}
           dataSource={users}
           loading={loading}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }}
-          locale={{ emptyText: "暂无用户" }}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => t("users.total", { count: total }) }}
+          locale={{ emptyText: t("users.empty") }}
         />
       </div>
 
       <Modal
-        title={editingUser ? "编辑用户" : "添加成员"}
+        title={editingUser ? t("users.editUserTitle") : t("users.addMemberTitle")}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleSubmit}
         confirmLoading={submitLoading}
-        okText={editingUser ? "保存" : "添加"}
+        okText={editingUser ? t("users.save") : t("users.add")}
         destroyOnClose
         width={440}
       >
         <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item name="name" label="姓名" rules={[{ required: true, message: "请输入姓名" }]}>
-            <Input placeholder="姓名" />
+          <Form.Item name="name" label={t("users.name")} rules={[{ required: true }]}>
+            <Input placeholder="" />
           </Form.Item>
           <Form.Item
             name="email"
-            label="邮箱"
-            rules={[
-              { required: true, message: "请输入邮箱" },
-              { type: "email", message: "请输入有效邮箱" },
-            ]}
+            label={t("login.email")}
+            rules={[{ required: true }, { type: "email" }]}
           >
             <Input placeholder="email@example.com" disabled={!!editingUser} />
           </Form.Item>
           <Form.Item
             name="password"
-            label="密码"
-            rules={editingUser ? [] : [{ required: true, message: "请输入密码" }, { min: 6, message: "至少 6 位" }]}
+            label={t("users.password")}
+            rules={editingUser ? [] : [{ required: true }, { min: 6 }]}
           >
-            <Input.Password placeholder={editingUser ? "不修改请留空" : "密码"} />
+            <Input.Password placeholder={editingUser ? t("users.passwordPlaceholder") : ""} />
           </Form.Item>
-          <Form.Item name="role" label="角色" rules={[{ required: true }]}>
+          <Form.Item name="role" label={t("users.role")} rules={[{ required: true }]}>
             <Select options={ROLES} />
           </Form.Item>
-          <Form.Item name="department" label="部门">
-            <Select placeholder="选择部门" allowClear options={DEPARTMENTS.map((d) => ({ value: d, label: d }))} />
+          <Form.Item name="department" label={t("users.department")}>
+            <Select placeholder="" allowClear options={DEPARTMENTS.map((d) => ({ value: d, label: d }))} />
           </Form.Item>
           {editingUser && (
-            <Form.Item name="status" label="状态">
+            <Form.Item name="status" label={t("users.status")}>
               <Select options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
             </Form.Item>
           )}

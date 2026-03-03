@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
 import {
   BarChart,
@@ -18,6 +19,7 @@ import {
 const COLORS = ["#10b981", "#ef4444", "#f59e0b"];
 
 export default function Reports() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<any>(null);
   const [productionData, setProductionData] = useState<any[]>([]);
@@ -107,32 +109,32 @@ export default function Reports() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800">报表与分析</h2>
-        <div className="text-gray-500">加载中...</div>
+        <h2 className="text-2xl font-bold text-gray-800">{t("reports.title")}</h2>
+        <div className="text-gray-500">{t("reports.loading")}</div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">报表与分析</h2>
+      <h2 className="text-2xl font-bold text-gray-800">{t("reports.title")}</h2>
 
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <p className="text-gray-500 text-sm">总订单数</p>
+            <p className="text-gray-500 text-sm">{t("reports.totalOrders")}</p>
             <p className="text-2xl font-bold text-gray-900">{stats.totalOrders ?? 0}</p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <p className="text-gray-500 text-sm">待处理订单</p>
+            <p className="text-gray-500 text-sm">{t("reports.pendingOrders")}</p>
             <p className="text-2xl font-bold text-amber-600">{stats.pendingOrders ?? 0}</p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <p className="text-gray-500 text-sm">进行中生产</p>
+            <p className="text-gray-500 text-sm">{t("reports.activeProduction")}</p>
             <p className="text-2xl font-bold text-blue-600">{stats.activeProduction ?? 0}</p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <p className="text-gray-500 text-sm">质量异常</p>
+            <p className="text-gray-500 text-sm">{t("reports.qualityIssues")}</p>
             <p className="text-2xl font-bold text-red-600">{stats.qualityIssues ?? 0}</p>
           </div>
         </div>
@@ -140,7 +142,7 @@ export default function Reports() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Production vs Target</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">{t("reports.productionVsTarget")}</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={productionData}>
@@ -162,7 +164,7 @@ export default function Reports() {
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Quality Control Distribution</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">{t("reports.qualityDistribution")}</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -194,7 +196,7 @@ export default function Reports() {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Revenue Trend</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">{t("reports.revenueTrend")}</h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={revenueData}>

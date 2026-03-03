@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { motion } from 'motion/react';
 import { Car, ShieldCheck, Wrench } from 'lucide-react';
+import { Select } from 'antd';
+import { useGlobalStore, type Lang } from '../store/globalStore';
+
+const LANGUAGE_OPTIONS = [
+  { value: 'zh' as const, label: '中文' },
+  { value: 'en' as const, label: 'English' },
+];
 
 export default function Login() {
+  const { t } = useTranslation();
+  const lang = useGlobalStore((s) => s.lang);
+  const setLang = useGlobalStore((s) => s.setLang);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,10 +36,10 @@ export default function Login() {
       } else {
         await api.auth.register({ email, password, name, role: 'manager', department: 'General' });
         setIsLogin(true);
-        setError('Registration successful! Please login.');
+        setError(t('login.regSuccess'));
       }
     } catch (err) {
-      setError('Authentication failed. Please check your credentials.');
+      setError(t('login.authFailed'));
     } finally {
       setLoading(false);
     }
@@ -36,6 +47,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-4 right-4 z-20">
+        <Select
+          value={lang}
+          onChange={(v) => setLang(v as Lang)}
+          options={LANGUAGE_OPTIONS}
+          className="w-28"
+          size="middle"
+        />
+      </div>
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -53,8 +73,8 @@ export default function Login() {
               <Car className="text-white w-8 h-8" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">AutoParts Pro</h2>
-          <p className="text-slate-400">Manufacturing Management System</p>
+          <h2 className="text-3xl font-bold text-white mb-2">{t('login.title')}</h2>
+          <p className="text-slate-400">{t('login.subtitle')}</p>
         </div>
 
         {error && (
@@ -66,30 +86,30 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">{t('login.fullName')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="John Doe"
+                placeholder={t('login.placeholderName')}
                 required
               />
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">{t('login.email')}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="admin@autoparts.com"
+              placeholder={t('login.placeholderEmail')}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">{t('login.password')}</label>
             <input
               type="password"
               value={password}
@@ -105,7 +125,7 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-semibold py-3 rounded-lg shadow-lg transform transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+            {loading ? t('login.processing') : (isLogin ? t('login.signIn') : t('login.createAccount'))}
           </button>
         </form>
 
@@ -114,18 +134,18 @@ export default function Login() {
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm text-slate-400 hover:text-white transition-colors"
           >
-            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+            {isLogin ? t('login.noAccount') : t('login.hasAccount')}
           </button>
         </div>
-        
+
         <div className="mt-8 pt-6 border-t border-slate-700 flex justify-center space-x-6 text-slate-500">
           <div className="flex flex-col items-center">
             <ShieldCheck size={20} className="mb-1" />
-            <span className="text-xs">Secure</span>
+            <span className="text-xs">{t('login.secure')}</span>
           </div>
           <div className="flex flex-col items-center">
             <Wrench size={20} className="mb-1" />
-            <span className="text-xs">Reliable</span>
+            <span className="text-xs">{t('login.reliable')}</span>
           </div>
         </div>
       </motion.div>

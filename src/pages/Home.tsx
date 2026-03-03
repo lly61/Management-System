@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
 import {
   BarChart,
@@ -14,6 +15,7 @@ import {
 import { AlertCircle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 
 export default function Home() {
+  const { t } = useTranslation();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,31 +34,31 @@ export default function Home() {
   }, []);
 
   if (loading)
-    return <div className="p-8 text-center">Loading dashboard data...</div>;
+    return <div className="p-8 text-center">{t("home.loading")}</div>;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="订单总数"
+          title={t("home.totalOrders")}
           value={data?.stats?.totalOrders}
           icon={TrendingUp}
           color="bg-blue-500"
         />
         <StatCard
-          title="待处理订单"
+          title={t("home.pendingOrders")}
           value={data?.stats?.pendingOrders}
           icon={Clock}
           color="bg-amber-500"
         />
         <StatCard
-          title="生产中"
+          title={t("home.activeProduction")}
           value={data?.stats?.activeProduction}
           icon={CheckCircle}
           color="bg-emerald-500"
         />
         <StatCard
-          title="质量问题"
+          title={t("home.qualityIssues")}
           value={data?.stats?.qualityIssues}
           icon={AlertCircle}
           color="bg-red-500"
@@ -65,7 +67,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">收入概览</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">{t("home.revenueOverview")}</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data?.revenueData}>
@@ -92,7 +94,7 @@ export default function Home() {
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">生产产出</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">{t("home.productionOutput")}</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data?.revenueData}>

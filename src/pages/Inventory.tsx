@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../services/api";
 import { Search, Plus, Filter, Pencil, Trash2 } from "lucide-react";
 import { Modal, Form, Input, InputNumber, Select, Button, message, Popconfirm, Space, Table } from "antd";
@@ -18,6 +19,7 @@ const defaultForm = {
 };
 
 export default function Inventory() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,7 +42,7 @@ export default function Inventory() {
       setItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
-      message.error("加载库存列表失败");
+      message.error(t("inventory.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -97,10 +99,10 @@ export default function Inventory() {
       setSubmitLoading(true);
       if (editingItem) {
         await api.inventory.update(editingItem._id, payload);
-        message.success("部件已更新");
+        message.success(t("inventory.updateSuccess"));
       } else {
         await api.inventory.create(payload);
-        message.success("部件已添加");
+        message.success(t("inventory.createSuccess"));
       }
       setModalOpen(false);
       loadInventory();
@@ -118,7 +120,7 @@ export default function Inventory() {
       message.success("已删除");
       loadInventory();
     } catch (e) {
-      message.error("删除失败");
+      message.error(t("inventory.deleteFailed"));
     }
   };
 
@@ -131,16 +133,16 @@ export default function Inventory() {
   const hasActiveFilters = filterStock !== "all" || !!filterCategory;
 
   const columns: ColumnsType<any> = [
-    { title: "零件编号", dataIndex: "partNumber", key: "partNumber", render: (v: string) => <span className="font-mono text-sm text-gray-600">{v}</span> },
-    { title: "名称", dataIndex: "name", key: "name", render: (v: string) => <span className="font-medium text-gray-900">{v}</span> },
+    { title: t("inventory.partNumber"), dataIndex: "partNumber", key: "partNumber", render: (v: string) => <span className="font-mono text-sm text-gray-600">{v}</span> },
+    { title: t("inventory.name"), dataIndex: "name", key: "name", render: (v: string) => <span className="font-medium text-gray-900">{v}</span> },
     {
-      title: "类别",
+      title: t("inventory.category"),
       dataIndex: "category",
       key: "category",
       render: (v: string) => <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">{v}</span>,
     },
     {
-      title: "库存",
+      title: t("inventory.quantity"),
       key: "quantity",
       render: (_: unknown, r: any) => (
         <div className="flex items-center gap-2">
@@ -149,30 +151,30 @@ export default function Inventory() {
         </div>
       ),
     },
-    { title: "地点", dataIndex: "location", key: "location", render: (v: string) => v ?? "-" },
+    { title: t("inventory.location"), dataIndex: "location", key: "location", render: (v: string) => v ?? "-" },
     {
-      title: "价格",
+      title: t("inventory.price"),
       dataIndex: "unitPrice",
       key: "unitPrice",
       render: (v: number) => (v != null ? `$${Number(v).toFixed(2)}` : "-"),
     },
     {
-      title: "状态",
+      title: t("inventory.status"),
       key: "status",
       render: (_: unknown, r: any) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${r.quantity > r.minStockLevel ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-          {r.quantity > r.minStockLevel ? "正常" : "低库存"}
+          {r.quantity > r.minStockLevel ? t("inventory.normal") : t("inventory.lowStock")}
         </span>
       ),
     },
     {
-      title: "操作",
+      title: t("inventory.action"),
       key: "action",
       render: (_: unknown, r: any) => (
         <Space>
-          <Button type="link" size="small" icon={<Pencil size={14} />} onClick={() => openEdit(r)}>编辑</Button>
-          <Popconfirm title="确定删除该部件？" onConfirm={() => handleDelete(r._id)}>
-            <Button type="link" size="small" danger icon={<Trash2 size={14} />}>删除</Button>
+          <Button type="link" size="small" icon={<Pencil size={14} />} onClick={() => openEdit(r)}>{t("inventory.edit")}</Button>
+          <Popconfirm title={t("inventory.deleteConfirm")} onConfirm={() => handleDelete(r._id)}>
+            <Button type="link" size="small" danger icon={<Trash2 size={14} />}>{t("inventory.delete")}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -183,11 +185,11 @@ export default function Inventory() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">库存管理</h2>
-          <p className="text-gray-500">跟踪零件、库存水平和供货商</p>
+          <h2 className="text-2xl font-bold text-gray-800">{t("inventory.title")}</h2>
+          <p className="text-gray-500">{t("inventory.subtitle")}</p>
         </div>
         <Button type="primary" icon={<Plus size={18} />} onClick={openAdd} className="flex items-center gap-2">
-          添加部件
+          {t("inventory.addPart")}
         </Button>
       </div>
 
@@ -200,7 +202,7 @@ export default function Inventory() {
             />
             <input
               type="text"
-              placeholder="按名称或编号搜索..."
+              placeholder={t("inventory.searchPlaceholder")}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -212,34 +214,34 @@ export default function Inventory() {
               onClick={() => setFilterVisible(!filterVisible)}
               type={hasActiveFilters ? "primary" : "default"}
             >
-              筛选
-              {hasActiveFilters && " (已选)"}
+              {t("inventory.filter")}
+              {hasActiveFilters && ` (${t("inventory.filtered")})`}
             </Button>
             {hasActiveFilters && (
-              <Button onClick={clearFilters}>清除筛选</Button>
+              <Button onClick={clearFilters}>{t("inventory.clearFilter")}</Button>
             )}
           </Space>
         </div>
 
         {filterVisible && (
           <div className="px-4 pb-4 flex gap-4 flex-wrap items-center border-b border-gray-100">
-            <span className="text-gray-600 text-sm">库存状态：</span>
+            <span className="text-gray-600 text-sm">{t("inventory.stockStatus")}：</span>
             <Select
               value={filterStock}
               onChange={setFilterStock}
               style={{ width: 120 }}
               options={[
-                { value: "all", label: "全部" },
-                { value: "low", label: "低库存" },
-                { value: "ok", label: "正常" },
+                { value: "all", label: t("inventory.all") },
+                { value: "low", label: t("inventory.lowStock") },
+                { value: "ok", label: t("inventory.normal") },
               ]}
             />
-            <span className="text-gray-600 text-sm ml-2">类别：</span>
+            <span className="text-gray-600 text-sm ml-2">{t("inventory.category")}：</span>
             <Select
               value={filterCategory || undefined}
               onChange={(v) => setFilterCategory(v || "")}
               style={{ width: 140 }}
-              placeholder="全部类别"
+              placeholder={t("inventory.all")}
               allowClear
               options={CATEGORIES.map((c) => ({ value: c, label: c }))}
             />
@@ -251,58 +253,58 @@ export default function Inventory() {
           columns={columns}
           dataSource={filteredItems}
           loading={loading}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }}
-          locale={{ emptyText: "暂无数据" }}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => t("inventory.total", { count: total }) }}
+          locale={{ emptyText: t("inventory.empty") }}
         />
       </div>
 
       <Modal
-        title={editingItem ? "编辑部件" : "添加部件"}
+        title={editingItem ? t("inventory.editPartTitle") : t("inventory.addPartTitle")}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleSubmit}
         confirmLoading={submitLoading}
         width={520}
         destroyOnClose
-        okText={editingItem ? "保存" : "添加"}
+        okText={editingItem ? t("inventory.save") : t("inventory.add")}
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Form.Item
             name="partNumber"
-            label="零件编号"
-            rules={[{ required: true, message: "请输入零件编号" }]}
+            label={t("inventory.partNumber")}
+            rules={[{ required: true, message: " " }]}
           >
-            <Input placeholder="如 ENG-001" disabled={!!editingItem} />
+            <Input placeholder="ENG-001" disabled={!!editingItem} />
           </Form.Item>
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: "请输入名称" }]}
+            label={t("inventory.name")}
+            rules={[{ required: true, message: " " }]}
           >
-            <Input placeholder="部件名称" />
+            <Input placeholder="" />
           </Form.Item>
           <Form.Item
             name="category"
-            label="类别"
-            rules={[{ required: true, message: "请选择类别" }]}
+            label={t("inventory.category")}
+            rules={[{ required: true }]}
           >
-            <Select placeholder="选择类别" options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
+            <Select placeholder="" options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="quantity" label="库存数量" initialValue={0}>
+            <Form.Item name="quantity" label={t("inventory.quantity")} initialValue={0}>
               <InputNumber min={0} className="w-full" />
             </Form.Item>
-            <Form.Item name="minStockLevel" label="最低库存" initialValue={10}>
+            <Form.Item name="minStockLevel" label={t("inventory.minStock")} initialValue={10}>
               <InputNumber min={0} className="w-full" />
             </Form.Item>
           </div>
-          <Form.Item name="location" label="存放地点">
-            <Input placeholder="如 A-01" />
+          <Form.Item name="location" label={t("inventory.location")}>
+            <Input placeholder="A-01" />
           </Form.Item>
-          <Form.Item name="supplier" label="供货商">
-            <Input placeholder="供货商名称" />
+          <Form.Item name="supplier" label={t("inventory.supplier")}>
+            <Input placeholder="" />
           </Form.Item>
-          <Form.Item name="unitPrice" label="单价">
+          <Form.Item name="unitPrice" label={t("inventory.unitPrice")}>
             <InputNumber min={0} step={0.01} className="w-full" placeholder="0.00" />
           </Form.Item>
         </Form>
