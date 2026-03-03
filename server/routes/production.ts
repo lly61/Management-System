@@ -31,4 +31,13 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    await ProductionPlan.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Production plan deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting production plan' });
+  }
+});
+
 export default router;

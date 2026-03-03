@@ -43,4 +43,45 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// 用户列表（不含密码）
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users' });
+  }
+});
+
+// 更新用户
+router.put('/users/:id', async (req, res) => {
+  try {
+    const { name, role, department, status, password } = req.body;
+    const update: Record<string, unknown> = {};
+    if (name != null) update.name = name;
+    if (role != null) update.role = role;
+    if (department != null) update.department = department;
+    if (status != null) update.status = status;
+    if (password != null && password !== '') {
+      update.password = await bcrypt.hash(password, 10);
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, update, { new: true }).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user' });
+  }
+});
+
+// 删除用户
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+});
+
 export default router;

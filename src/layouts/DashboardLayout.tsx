@@ -1,54 +1,61 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Factory, 
-  ClipboardCheck, 
-  Users, 
-  BarChart3, 
-  LogOut, 
-  Menu, 
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Factory,
+  ClipboardCheck,
+  Users,
+  BarChart3,
+  LogOut,
+  Menu,
   X,
-  Settings
-} from 'lucide-react';
-import { cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+  Settings,
+} from "lucide-react";
+import { cn } from "../lib/utils";
+import { motion, AnimatePresence } from "motion/react";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const navItems = [
-    { name: 'Workbench', path: '/home', icon: LayoutDashboard },
-    { name: 'Inventory', path: '/inventory', icon: Package },
-    { name: 'Orders', path: '/orders', icon: ShoppingCart },
-    { name: 'Production', path: '/production', icon: Factory },
-    { name: 'Quality', path: '/quality', icon: ClipboardCheck },
-    { name: 'Users', path: '/users', icon: Users },
-    { name: 'Reports', path: '/reports', icon: BarChart3 },
+    { name: "工作台", path: "/home", icon: LayoutDashboard },
+    { name: "存货管理", path: "/inventory", icon: Package },
+    { name: "订单管理", path: "/orders", icon: ShoppingCart },
+    { name: "生产管理", path: "/production", icon: Factory },
+    { name: "质量管理", path: "/quality", icon: ClipboardCheck },
+    { name: "用户管理", path: "/users", icon: Users },
+    { name: "报告与分析", path: "/reports", icon: BarChart3 },
   ];
 
   return (
     <div className="min-h-screen bg-gray-100 flex overflow-hidden">
       {/* Sidebar */}
-      <motion.aside 
+      <motion.aside
         initial={false}
         animate={{ width: isSidebarOpen ? 256 : 80 }}
-        className="bg-slate-900 text-white flex-shrink-0 flex flex-col transition-all duration-300 z-20"
+        className="bg-slate-900 text-white shrink-0 flex flex-col transition-all duration-300 z-20"
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
           {isSidebarOpen ? (
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-              AutoParts Pro
+            <span className="text-xl font-bold bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+              全流程管理系统
             </span>
           ) : (
             <span className="text-xl font-bold text-blue-400 mx-auto">AP</span>
           )}
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-slate-800 rounded">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-1 hover:bg-slate-800 rounded"
+          >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
@@ -62,16 +69,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 to={item.path}
                 className={cn(
                   "flex items-center px-3 py-3 rounded-lg transition-colors group",
-                  isActive 
-                    ? "bg-blue-600 text-white" 
+                  isActive
+                    ? "bg-blue-600 text-white"
                     : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 )}
               >
-                <item.icon size={22} className={cn("flex-shrink-0", isActive ? "text-white" : "text-slate-400 group-hover:text-white")} />
+                <item.icon
+                  size={22}
+                  className={cn(
+                    "shrink-0",
+                    isActive
+                      ? "text-white"
+                      : "text-slate-400 group-hover:text-white"
+                  )}
+                />
                 {isSidebarOpen && (
-                  <motion.span 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     className="ml-3 font-medium whitespace-nowrap"
                   >
                     {item.name}
@@ -85,16 +100,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold">
-              {user?.name?.charAt(0) || 'U'}
+              {user?.name?.charAt(0) || "U"}
             </div>
             {isSidebarOpen && (
               <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.name}
+                </p>
                 <p className="text-xs text-slate-400 truncate">{user?.role}</p>
               </div>
             )}
           </div>
-          <button 
+          <button
             onClick={logout}
             className={cn(
               "mt-4 flex items-center w-full px-3 py-2 text-sm font-medium text-red-400 hover:bg-slate-800 rounded-lg transition-colors",
@@ -102,16 +119,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           >
             <LogOut size={20} />
-            {isSidebarOpen && <span className="ml-3">Logout</span>}
+            {isSidebarOpen && <span className="ml-3">退出</span>}
           </button>
         </div>
       </motion.aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden h-screen">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
           <h1 className="text-xl font-semibold text-gray-800">
-            {navItems.find(i => i.path === location.pathname)?.name || 'Dashboard'}
+            {navItems.find((i) => i.path === location.pathname)?.name ||
+              "Dashboard"}
           </h1>
           <div className="flex items-center space-x-4">
             <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">

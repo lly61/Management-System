@@ -1,87 +1,291 @@
-import React, { useEffect, useState } from 'react';
-import { api } from '../services/api';
-import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { api } from "../services/api";
+import { Calendar, Clock, Plus, Pencil, Trash2, TrendingUp } from "lucide-react";
+import { Button, Modal, Form, Input, InputNumber, Select, DatePicker, message, Popconfirm, Space } from "antd";
+import dayjs from "dayjs";
+
+const STATUS_OPTIONS = [
+  { value: "planned", label: "计划中" },
+  { value: "in_progress", label: "进行中" },
+  { value: "completed", label: "已完成" },
+  { value: "delayed", label: "已延期" },
+];
 
 export default function Production() {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [form] = Form.useForm();
+  const [progressForm] = Form.useForm();
+  const [submitLoading, setSubmitLoading] = useState(false);
+
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const data = await api.production.getAll();
+      setPlans(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+      message.error("加载生产计划失败");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const data = await api.production.getAll();
-        setPlans(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPlans();
+    loadPlans();
   }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'planned': return 'bg-blue-100 text-blue-700';
-      case 'in_progress': return 'bg-amber-100 text-amber-700';
-      case 'completed': return 'bg-emerald-100 text-emerald-700';
-      case 'delayed': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case "planned": return "bg-blue-100 text-blue-700";
+      case "in_progress": return "bg-amber-100 text-amber-700";
+      case "completed": return "bg-emerald-100 text-emerald-700";
+      case "delayed": return "bg-red-100 text-red-700";
+      default: return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const openAdd = () => {
+    setEditingPlan(null);
+    form.setFieldsValue({
+      planId: "",
+      partNumber: "",
+      targetQuantity: 100,
+      completedQuantity: 0,
+      startDate: dayjs(),
+      endDate: dayjs().add(2, "week"),
+      status: "planned",
+      assignedLine: "",
+    });
+    setModalOpen(true);
+  };
+
+  const openEdit = (plan: any) => {
+    setEditingPlan(plan);
+    form.setFieldsValue({
+      planId: plan.planId,
+      partNumber: plan.partNumber,
+      targetQuantity: plan.targetQuantity ?? 100,
+      completedQuantity: plan.completedQuantity ?? 0,
+      startDate: plan.startDate ? dayjs(plan.startDate) : dayjs(),
+      endDate: plan.endDate ? dayjs(plan.endDate) : dayjs().add(2, "week"),
+      status: plan.status || "planned",
+      assignedLine: plan.assignedLine ?? "",
+    });
+    setModalOpen(true);
+  };
+
+  const openProgress = (plan: any) => {
+    setEditingPlan(plan);
+    progressForm.setFieldsValue({
+      completedQuantity: plan.completedQuantity ?? 0,
+      status: plan.status || "in_progress",
+    });
+    setProgressOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        planId: values.planId.trim(),
+        partNumber: values.partNumber.trim(),
+        targetQuantity: Number(values.targetQuantity) || 0,
+        completedQuantity: Number(values.completedQuantity) ?? 0,
+        startDate: values.startDate?.toDate?.() ?? values.startDate,
+        endDate: values.endDate?.toDate?.() ?? values.endDate,
+        status: values.status,
+        assignedLine: values.assignedLine?.trim() || undefined,
+      };
+      setSubmitLoading(true);
+      if (editingPlan) {
+        await api.production.update(editingPlan._id, payload);
+        message.success("计划已更新");
+      } else {
+        await api.production.create(payload);
+        message.success("计划已创建");
+      }
+      setModalOpen(false);
+      loadPlans();
+    } catch (e: any) {
+      if (e?.errorFields) return;
+      message.error(e?.message || "操作失败");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleProgressSubmit = async () => {
+    try {
+      const values = await progressForm.validateFields();
+      if (!editingPlan) return;
+      await api.production.update(editingPlan._id, {
+        completedQuantity: Number(values.completedQuantity) ?? 0,
+        status: values.status,
+      });
+      message.success("进度已更新");
+      setProgressOpen(false);
+      loadPlans();
+    } catch (e: any) {
+      if (e?.errorFields) return;
+      message.error(e?.message || "操作失败");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.production.delete(id);
+      message.success("计划已删除");
+      loadPlans();
+    } catch {
+      message.error("删除失败");
     }
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Production Planning</h2>
-      
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">生产计划</h2>
+        <Button type="primary" icon={<Plus size={18} />} onClick={openAdd}>
+          新建计划
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <div>Loading production plans...</div>
-        ) : plans.map((plan) => (
-          <div key={plan._id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="font-bold text-gray-900">{plan.planId}</h3>
+          <div>生产计划加载中...</div>
+        ) : (
+          plans.map((plan) => (
+            <div
+              key={plan._id}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-bold text-gray-900">{plan.planId}</h3>
+                <Space>
+                  <Button type="link" size="small" icon={<TrendingUp size={14} />} onClick={() => openProgress(plan)}>
+                    进度
+                  </Button>
+                  <Button type="link" size="small" icon={<Pencil size={14} />} onClick={() => openEdit(plan)}>
+                    编辑
+                  </Button>
+                  <Popconfirm title="确定删除该计划？" onConfirm={() => handleDelete(plan._id)}>
+                    <Button type="link" size="small" danger icon={<Trash2 size={14} />}>
+                      删除
+                    </Button>
+                  </Popconfirm>
+                </Space>
+              </div>
               <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(plan.status)}`}>
-                {plan.status.replace('_', ' ').toUpperCase()}
+                {plan.status.replace("_", " ").toUpperCase()}
               </span>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 uppercase">Part Number</p>
-                <p className="font-medium text-gray-800">{plan.partNumber}</p>
-              </div>
-              
-              <div className="flex justify-between">
+
+              <div className="space-y-3 mt-3">
                 <div>
-                  <p className="text-xs text-gray-500 uppercase">Target</p>
-                  <p className="font-medium text-gray-800">{plan.targetQuantity}</p>
+                  <p className="text-xs text-gray-500 uppercase">Part Number</p>
+                  <p className="font-medium text-gray-800">{plan.partNumber}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 uppercase">Completed</p>
-                  <p className="font-medium text-gray-800">{plan.completedQuantity}</p>
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase">Target</p>
+                    <p className="font-medium text-gray-800">{plan.targetQuantity}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500 uppercase">Completed</p>
+                    <p className="font-medium text-gray-800">{plan.completedQuantity ?? 0}</p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min((plan.completedQuantity / plan.targetQuantity) * 100, 100)}%` }}
-                ></div>
-              </div>
-
-              <div className="flex justify-between text-sm pt-2 border-t border-gray-100">
-                <span className="text-gray-500 flex items-center gap-1">
-                  <Calendar size={14} /> {new Date(plan.startDate).toLocaleDateString()}
-                </span>
-                <span className="text-gray-500 flex items-center gap-1">
-                  <Clock size={14} /> {new Date(plan.endDate).toLocaleDateString()}
-                </span>
+                <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(
+                        ((plan.completedQuantity ?? 0) / (plan.targetQuantity || 1)) * 100,
+                        100
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-gray-100">
+                  <span className="text-gray-500 flex items-center gap-1">
+                    <Calendar size={14} /> {new Date(plan.startDate).toLocaleDateString()}
+                  </span>
+                  <span className="text-gray-500 flex items-center gap-1">
+                    <Clock size={14} /> {new Date(plan.endDate).toLocaleDateString()}
+                  </span>
+                </div>
+                {plan.assignedLine && (
+                  <p className="text-xs text-gray-500">产线: {plan.assignedLine}</p>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
+
+      <Modal
+        title={editingPlan ? "编辑计划" : "新建计划"}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={handleSubmit}
+        confirmLoading={submitLoading}
+        okText={editingPlan ? "保存" : "创建"}
+        destroyOnClose
+        width={480}
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item name="planId" label="计划编号" rules={[{ required: true, message: "请输入计划编号" }]}>
+            <Input placeholder="如 PLN-104" disabled={!!editingPlan} />
+          </Form.Item>
+          <Form.Item name="partNumber" label="零件编号" rules={[{ required: true, message: "请输入零件编号" }]}>
+            <Input placeholder="如 ENG-001" />
+          </Form.Item>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="targetQuantity" label="目标数量" rules={[{ required: true }]}>
+              <InputNumber min={1} className="w-full" />
+            </Form.Item>
+            <Form.Item name="completedQuantity" label="已完成数量">
+              <InputNumber min={0} className="w-full" />
+            </Form.Item>
+          </div>
+          <Form.Item name="startDate" label="开始日期" rules={[{ required: true }]}>
+            <DatePicker className="w-full" />
+          </Form.Item>
+          <Form.Item name="endDate" label="结束日期" rules={[{ required: true }]}>
+            <DatePicker className="w-full" />
+          </Form.Item>
+          <Form.Item name="status" label="状态">
+            <Select options={STATUS_OPTIONS} />
+          </Form.Item>
+          <Form.Item name="assignedLine" label="产线">
+            <Input placeholder="如 Line A" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="更新进度"
+        open={progressOpen}
+        onCancel={() => setProgressOpen(false)}
+        onOk={handleProgressSubmit}
+        okText="保存"
+        width={360}
+      >
+        {editingPlan && (
+          <p className="text-gray-600 mb-4">{editingPlan.planId} - {editingPlan.partNumber}</p>
+        )}
+        <Form form={progressForm} layout="vertical">
+          <Form.Item name="completedQuantity" label="已完成数量" rules={[{ required: true }]}>
+            <InputNumber min={0} className="w-full" />
+          </Form.Item>
+          <Form.Item name="status" label="状态">
+            <Select options={STATUS_OPTIONS} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

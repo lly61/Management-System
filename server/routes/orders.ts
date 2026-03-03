@@ -22,6 +22,16 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching order' });
+  }
+});
+
 router.put('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
@@ -29,6 +39,15 @@ router.put('/:id/status', async (req, res) => {
     res.json(updatedOrder);
   } catch (error) {
     res.status(500).json({ message: 'Error updating order status' });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Order deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting order' });
   }
 });
 

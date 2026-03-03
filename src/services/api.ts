@@ -45,6 +45,13 @@ const mockStats = {
   ]
 };
 
+const mockUsers = [
+  { _id: '1', name: 'John Doe', email: 'john@autoparts.com', role: 'admin', department: 'Management', status: 'active' },
+  { _id: '2', name: 'Jane Smith', email: 'jane@autoparts.com', role: 'manager', department: 'Production', status: 'active' },
+  { _id: '3', name: 'Mike Johnson', email: 'mike@autoparts.com', role: 'worker', department: 'Assembly', status: 'inactive' },
+  { _id: '4', name: 'Sarah Wilson', email: 'sarah@autoparts.com', role: 'inspector', department: 'Quality', status: 'active' },
+];
+
 async function fetchWithMock(endpoint: string, options: RequestInit = {}, mockData: any) {
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -69,20 +76,33 @@ async function fetchWithMock(endpoint: string, options: RequestInit = {}, mockDa
 export const api = {
   inventory: {
     getAll: () => fetchWithMock('/inventory', {}, mockInventory),
-    create: (data: any) => fetchWithMock('/inventory', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString() }),
+    create: (data: any) => fetchWithMock('/inventory', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString(), lastUpdated: new Date().toISOString() }),
+    update: (id: string, data: any) => fetchWithMock(`/inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) }, { ...data, _id: id, lastUpdated: new Date().toISOString() }),
+    delete: (id: string) => fetchWithMock(`/inventory/${id}`, { method: 'DELETE' }, { message: 'Item deleted' }),
   },
   orders: {
     getAll: () => fetchWithMock('/orders', {}, mockOrders),
+    getById: (id: string) => fetchWithMock(`/orders/${id}`, {}, mockOrders[0]),
     create: (data: any) => fetchWithMock('/orders', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString() }),
+    updateStatus: (id: string, status: string) => fetchWithMock(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, { ...mockOrders[0], status }),
+    delete: (id: string) => fetchWithMock(`/orders/${id}`, { method: 'DELETE' }, { message: 'Order deleted' }),
   },
   production: {
     getAll: () => fetchWithMock('/production', {}, mockProduction),
+    create: (data: any) => fetchWithMock('/production', { method: 'POST', body: JSON.stringify(data) }, { ...data, _id: Math.random().toString() }),
+    update: (id: string, data: any) => fetchWithMock(`/production/${id}`, { method: 'PUT', body: JSON.stringify(data) }, { ...data, _id: id }),
+    delete: (id: string) => fetchWithMock(`/production/${id}`, { method: 'DELETE' }, { message: 'Production plan deleted' }),
   },
   quality: {
     getAll: () => fetchWithMock('/quality', {}, mockQuality),
   },
   reports: {
     getDashboard: () => fetchWithMock('/reports/dashboard', {}, mockStats),
+  },
+  users: {
+    getAll: () => fetchWithMock('/auth/users', {}, mockUsers),
+    update: (id: string, data: any) => fetchWithMock(`/auth/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, { ...data, _id: id }),
+    delete: (id: string) => fetchWithMock(`/auth/users/${id}`, { method: 'DELETE' }, { message: 'User deleted' }),
   },
   auth: {
     login: async (credentials: any) => {
